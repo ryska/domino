@@ -1,0 +1,2 @@
+-module(dom_client).
+-compile(export_all).
