@@ -2,8 +2,8 @@
 -compile(export_all).
 start() ->
   % ets:new(pids,[set,named_table]),
-  SendPID = spawn(dom_temp,fun() -> send({127,0,0,1}, 8853) end),
-  LoopPID = spawn(dom_temp, fun() -> loop(SendPID) end).
+  SendPID = spawn(dom_temp, send, [{127,0,0,1}, 8853]),
+  LoopPID = spawn(dom_temp, loop, [SendPID]).
   % ets:insert(pids,[{send, SendPID},{loop, LoopPID}]).
 
 % stop() ->
