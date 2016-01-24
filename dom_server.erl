@@ -10,7 +10,11 @@ start(Port) ->
         ets:new(dom_data, [set, public,  named_table]),
         ets:new(dom_func, [bag, public,  named_table]),
         io:format("Uruchamiam serwer na porcie ~p...~n", [Port]),
+
         add_func(temp, fun dom_func:temp/1),
+        add_func(dym, fun dom_func:dym/1),
+        add_func(alarm, fun dom_func:alarm/1),
+
         start
     catch
         _:_ -> io:format("Pojedynczy proces moze obslugiwac tylko jeden serwer!~n", []),
@@ -40,7 +44,7 @@ read(Port) ->
             io:format("Port ~p jest juz zajety przez inny proces!~n", [Port]),
             stop(Port);
         {ClientAddress, _, Data} ->
-            act(ClientAddress, Data),
+            spawn(dom_server, act, [ClientAddress, Data]),
             read(Port);
         _ ->
             stop(Port)

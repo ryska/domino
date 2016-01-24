@@ -18,7 +18,7 @@ alarm(_) -> nil.
 dym(tak) ->
     io:format("Czujnik wykryl dym!~n"),
     dom_server:send_to(sms, "Czujnik wykryl dym!"),
-    io:format("Otwieram okna..."),
-    dom_server:send_to(okna, otworz);
+    io:format("Otwieram okna...~n"),
+    dom_server:send_to(okno, otworz);
 dym(_) ->
-    dom_server:send_to(okna, zamknij).
+    dom_server:send_to(okno, zamknij).
