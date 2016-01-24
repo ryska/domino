@@ -1,33 +1,33 @@
 -module(dom_temp).
--compile(export_all).
-start() ->
-  % ets:new(pids,[set,named_table]),
-  SendPID = spawn(dom_temp, send, [{127,0,0,1}, 8853]),
-  LoopPID = spawn(dom_temp, loop, [SendPID]).
-  % ets:insert(pids,[{send, SendPID},{loop, LoopPID}]).
+-export([start/4, stop/3, loop/3]).
 
-% stop() ->
-  % [{_, LoopPID}] = ets:lookup(pids,loop),
-  % [{_, SendPID}] = ets:lookup(pids,send),
-  % LoopPID!stop,
-  % SendPID!stop.
+start(ServerAddress, ServerPort, Id, Name) ->
+    try
+        io:format("Uruchamiam czujnik temperatury o ID ~p...~n", [Id]),
+        PID = spawn(dom_temp, loop, [ServerAddress, ServerPort, Id]),
+        ets:new(dom_pids, [set, named_table]),
+        ets:insert(dom_pids, {loop, PID}),
+        dom_client:register(ServerAddress, ServerPort, Id, Name, 0),
+        start
+    catch
+        _:_ -> io:format("Pojedynczy proces moze obslugiwac tylko jeden czujnik!~n", []),
+        blad
+    end.
 
+stop(ServerAddress, ServerPort, Id) ->
+    try
+        dom_client:delete(ServerAddress, ServerPort, Id),
+        PID = element(2, hd(ets:lookup(dom_pids, loop))),
+        exit(PID, stop),
+        ets:delete(dom_pids),
+        io:format("Zatrzymuje czujnik temperatury o ID ~p...~n", [Id]),
+        stop
+    catch
+        _:_ -> io:format("Brak dzialajacego czujnika na tym procesie!~n"),
+        blad
+    end.
 
-loop(SendPID) ->
-  receive
-    stop -> nil;
-    generate ->
-      timer:sleep(timer:seconds(1)),
-      loop(SendPID),
-      random:uniform(40)
-  end.
-
-send(Address, Port) ->
-  receive
-    stop -> nil;
-
-    Socket ->
-      {ok, Socket} = gen_udp:connect(Address, Port, [binary, {active, true}]),
-      gen_udp:send(Socket, "Hej dziubasku"),
-      send(Address, Port)
-  end.
+loop(ServerAddress, ServerPort, Id) ->
+    dom_client:data(ServerAddress, ServerPort, Id, random:uniform(40)),
+    timer:sleep(timer:seconds(5)),
+    loop(ServerAddress, ServerPort, Id).

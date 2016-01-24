@@ -1,24 +1,13 @@
 -module(dom_client).
 -compile(export_all).
 
+register(ServerAddress, ServerPort, Id, Name, ClientPort) ->
+    {ok, Socket} = gen_udp:open(0, [binary, {active, false}]),
+    gen_udp:send(Socket, ServerAddress, ServerPort, term_to_binary({register, Id, Name, ClientPort})).
 
-start(Port) ->
-    spawn(fun () -> {ok, Sock} = gen_tcp:listen(Port, [{active, false}]),
-                    loop(Sock) end).
+data(ServerAddress, ServerPort, Id, Data) ->
+    dom_net:send(ServerAddress, ServerPort, {data, Id, Data}).
 
-loop(Sock) ->
-    {ok, Conn} = gen_tcp:accept(Sock),
-    Handler = spawn(fun () -> handle(Conn) end),
-    gen_tcp:controlling_process(Conn, Handler),
-    loop(Sock).
-
-handle(Conn) ->
-    gen_tcp:send(Conn, response("Hello World")),
-    gen_tcp:close(Conn).
-
-response(Str) ->
-    B = iolist_to_binary(Str),
-    iolist_to_binary(
-      io_lib:fwrite(
-         "HTTP/1.0 200 OK\nContent-Type: text/html\nContent-Length: ~p\n\n~s",
-         [size(B), B])).
+delete(ServerAddress, ServerPort, Id) ->
+    {ok, Socket} = gen_udp:open(0, [binary, {active, false}]),
+    gen_udp:send(Socket, ServerAddress, ServerPort, term_to_binary({delete, Id})).

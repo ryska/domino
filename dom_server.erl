@@ -1,48 +1,94 @@
 -module(dom_server).
--export([start/1, stop/1]).
--record(server_info, {pids = []}).
+-compile(export_all).
 
 start(Port) ->
-    ets:new(pids, [set, named_table]),
-    spawn(fun () -> {ok, ListenSocket} = gen_udp:listen(Port, [{active, true}]),
-                    loop(ListenSocket) end).
+    try
+        ets:new(dom_pids, [set, named_table]),
+        PID = spawn(dom_server, read, [Port]),
+        ets:insert(dom_pids, {read, Port, PID}),
+        ets:new(dom_clients, [set, public, named_table]),
+        ets:new(dom_data, [set, public,  named_table]),
+        ets:new(dom_func, [bag, public,  named_table]),
+        io:format("Uruchamiam serwer na porcie ~p...~n", [Port]),
+        add_func(temp, fun dom_func:temp/1),
+        start
+    catch
+        _:_ -> io:format("Pojedynczy proces moze obslugiwac tylko jeden serwer!~n", []),
+        error
+    end.
 
-stop() ->
 
+stop(Port) ->
+    try
+        PID = hd(hd(ets:match(dom_pids, {read, Port, '$1'}))),
+        exit(PID, stop),
+        ets:match_delete(dom_pids, {read, Port, '_'}),
+        ets:delete(dom_pids),
+        ets:delete(dom_clients),
+        ets:delete(dom_data),
+        ets:delete(dom_func),
+        io:format("Zatrzymano serwer!~n"),
+        stop
+    catch
+        _:_ -> io:format("Brak dzialajacego serwera na porcie ~p!~n", [Port]),
+        error
+    end.
 
+read(Port) ->
+    case dom_net:read(Port) of
+        {error, _} ->
+            io:format("Port ~p jest juz zajety przez inny proces!~n", [Port]),
+            stop(Port);
+        {ClientAddress, _, Data} ->
+            act(ClientAddress, Data),
+            read(Port);
+        _ ->
+            stop(Port)
+    end.
 
-loop(ListenSocket) ->
-    {ok, Connection} = gen_udp:accept(ListenSocket),
-    ConnectionHandler = spawn(fun () -> read(Connection) end),
-    gen_udp:controlling_process(Connection, ConnectionHandler),
-    loop(ListenSocket).
+act(ClientAddress, {register, Id, Name, ClientPort}) ->
+    ets:insert(dom_clients, {Id, Name, ClientAddress, ClientPort}),
+    io:format("Rejestruje klienta o id ~p i nazwie ~p.~n", [Id, Name]);
+act(_, {data, Id, Data}) ->
+    ets:insert(dom_data, {Id, Data}),
+    io:format("Otrzymalem dane od ID ~p: ~p~n", [Id, Data]),
+    exec_func(Id);
+act(_, {delete, Id}) ->
+    try
+        ets:delete(dom_clients, Id),
+        io:format("Usuwam klienta o id ~p.~n", [Id])
+    catch
+        error:badarg -> io:format("Brak dzialajacego klienta o id ~p!~n", [Id])
+    end.
 
-read(Connection) ->
-    case gen_udp:recv(Connection, 0) of
-        {ok, Data} ->
-            io:format("Dostałem dane: ~p~n", [Data]);
-        {error, closed} ->
-            nil
-    end,
-    gen_tcp:close(Connection).
+get_data(Id) ->
+    case ets:lookup(dom_data, Id) of
+        [] -> nil;
+        [{Id, Data}] -> Data
+    end.
 
-% case gen_udp:open(
-%     Option#udp_server_option.port,
-%     Option#udp_server_option.option
-%   ) of
-%     {ok, Socket} ->
-%       proc_lib:init_ack(Parent, {ok, self()}),
-%       recv(
-%         proplists:get_value(active, Option#udp_server_option.option),
-%         Socket, Module, Option
-%       );
-%     {error, Reason} ->
-%       exit({error, Reason})
-%   end.
+send_to(Id, Data) ->
+    case ets:lookup(dom_clients, Id) of
+        [] -> nil;
+        [{Id, _, ClientAddress, ClientPort}] ->
+            dom_net:send(ClientAddress, ClientPort, Data)
+    end.
+
+add_func(Id, Func) ->
+    case is_function(Func) of
+        true ->
+            ets:insert(dom_func, {Id, Func});
+        false ->
+            io:format("Podany argument ~p nie jest funkcja!~n", [Func])
+    end.
+
+exec_func(Id) ->
+    case ets:lookup(dom_func, Id) of
+        [] -> nil;
+        Funcs ->
+                lists:map(fun ({_, Func}) -> Func(get_data(Id)) end, Funcs)
+    end.
+
+% fun
 %
-% response(Str) ->
-%     B = iolist_to_binary(Str),
-%     iolist_to_binary(
-%       io_lib:fwrite(
-%          "HTTP/1.0 200 OK\nContent-Type: text/html\nContent-Length: ~p\n\n~s",
-%          [size(B), B])).
+% end.
