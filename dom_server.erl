@@ -1,6 +1,17 @@
 -module(dom_server).
--compile(export_all).
+-export([start/1, stop/1, add_func/2, send_to/2]).
+%%%-----------------------------------------------------------------------------
+%%% Glowny serwer aplikacji.
+%%% Zajmuje sie wymiana danych pomiedzy klientami oraz wykonywaniem odpowiednich
+%%% funkcji w zaleznosci od otrzymanych danych.
+%%%-----------------------------------------------------------------------------
 
+%%------------------------------------------------------------------------------
+%% Funkcja: start/1
+%% Cel: Uruchamia serwer na podanym porcie oraz tworzy wszelkie potrzebne magazyny
+%%     danych. Jesli podany port jest juz zajety to zwracany jest natychmiast blad.
+%% Argumenty: Port - numer portu.
+%%------------------------------------------------------------------------------
 start(Port) ->
     try
         ets:new(dom_pids, [set, named_table]),
@@ -21,7 +32,12 @@ start(Port) ->
         error
     end.
 
-
+%%------------------------------------------------------------------------------
+%% Funkcja: start/1
+%% Cel: Zatrzymuje serwer dzialajacy na podanym porcie oraz usuwa wszelkie magazyny
+%%     danych. Jesli nie istnieje serwer na podanym porcie to zwracany jest natychmiast blad.
+%% Argumenty: Port - numer portu.
+%%------------------------------------------------------------------------------
 stop(Port) ->
     try
         PID = hd(hd(ets:match(dom_pids, {read, Port, '$1'}))),
@@ -38,6 +54,12 @@ stop(Port) ->
         error
     end.
 
+%%------------------------------------------------------------------------------
+%% Funkcja: read/1
+%% Cel: Odczytuje dane przychodzace do serwera a nastepnie reaguje asynchronicznie
+%%     w zaleznosci od otrzymanych danych.
+%% Argumenty: Port - numer portu.
+%%------------------------------------------------------------------------------
 read(Port) ->
     case dom_net:read(Port) of
         {error, _} ->
@@ -50,6 +72,11 @@ read(Port) ->
             stop(Port)
     end.
 
+%%------------------------------------------------------------------------------
+%% Funkcja: act/3
+%% Cel: Reaguje na otrzymane dane w zaleznosci od ich formatu.
+%% Argumenty: Adres klienta, krotka z danymi.
+%%------------------------------------------------------------------------------
 act(ClientAddress, {register, Id, Name, ClientPort}) ->
     ets:insert(dom_clients, {Id, Name, ClientAddress, ClientPort}),
     io:format("Rejestruje klienta o id ~p i nazwie ~p.~n", [Id, Name]);
@@ -65,12 +92,24 @@ act(_, {delete, Id}) ->
         error:badarg -> io:format("Brak dzialajacego klienta o id ~p!~n", [Id])
     end.
 
+
+%%------------------------------------------------------------------------------
+%% Funkcja: get_data/1
+%% Cel: Zwraca dane, ktore przyszly od clienta z podanym ID.
+%% Argumenty: ID klienta.
+%% Zwraca: Zapisane dane lub nil, jesli nie odebrano danych od klienta o podanym ID.
+%%------------------------------------------------------------------------------
 get_data(Id) ->
     case ets:lookup(dom_data, Id) of
         [] -> nil;
         [{Id, Data}] -> Data
     end.
 
+%%------------------------------------------------------------------------------
+%% Funkcja: send_to/2
+%% Cel: Wysyla podane dane do klienta o podanym ID.
+%% Argumenty: ID klienta, dane do wyslania.
+%%------------------------------------------------------------------------------
 send_to(Id, Data) ->
     case ets:lookup(dom_clients, Id) of
         [] -> nil;
@@ -78,6 +117,11 @@ send_to(Id, Data) ->
             dom_net:send(ClientAddress, ClientPort, Data)
     end.
 
+%%------------------------------------------------------------------------------
+%% Funkcja: add_func/2
+%% Cel: Dodaje funkcje reagujaca na otrzymanie danych od klienta o podanym ID.
+%% Argumenty: ID klienta, funkcja reagujaca przyjmujaca jako argument otrzymane dane.
+%%------------------------------------------------------------------------------
 add_func(Id, Func) ->
     case is_function(Func) of
         true ->
@@ -86,13 +130,15 @@ add_func(Id, Func) ->
             io:format("Podany argument ~p nie jest funkcja!~n", [Func])
     end.
 
+%%------------------------------------------------------------------------------
+%% Funkcja: exec_func/1
+%% Cel: Wywoluje wszystkie funkcje reagujace na otrzymanie danych od klienta
+%%     o podanym ID.
+%% Argumenty: ID klienta
+%%------------------------------------------------------------------------------
 exec_func(Id) ->
     case ets:lookup(dom_func, Id) of
         [] -> nil;
         Funcs ->
                 lists:map(fun ({_, Func}) -> Func(get_data(Id)) end, Funcs)
     end.
-
-% fun
-%
-% end.

@@ -1,12 +1,16 @@
 -module(dom_net).
 -export([read/1, read/2, send/3]).
+%%%-----------------------------------------------------------------------------
+%%% Funkcje pomocnicze do wygodnej komunikacji przez protokol UDP.
+%%%-----------------------------------------------------------------------------
 
 %%------------------------------------------------------------------------------
-%% Function: read/2
-%% Purpose: Reads incoming UDP data with timeout.
-%% Args: Port number to open for reading and Timeout in miliseconds.
-%% Returns: Touple in format {SenderAddress, SenderPort, Data} or {}
-%%     if errror occured.
+%% Funkcja: read/2
+%% Cel: Odczytuje przychodzace dane na protokole UDP i podanym porcie czekajac
+%%     podana ilosc milisekund.
+%% Argumenty: Port - numer portu, Timeout - ilosc milisekund czekania.
+%% Zwraca: Krotka w formacie {SenderAddress, SenderPort, Data} lub {}
+%%     jesli wystapil blad lub nie odebrano danych.
 %%------------------------------------------------------------------------------
 read(Port, Timeout) ->
     case gen_udp:open(Port, [binary, {active, false}]) of
@@ -21,11 +25,12 @@ read(Port, Timeout) ->
     Return.
 
 %%------------------------------------------------------------------------------
-%% Function: read/1
-%% Purpose: Reads incoming UDP data with default timeout of 1000 miliseconds.
-%% Args: Port number to open for reading.
-%% Returns: Touple in format {SenderAddress, SenderPort, Data} or {}
-%%     if errror occured.
+%% Funkcja: read/1
+%% Cel: Odczytuje przychodzace dane na protokole UDP i podanym porcie czekajac
+%%     1000 milisekund.
+%% Argumenty: Port - numer portu.
+%% Zwraca: Krotka w formacie {SenderAddress, SenderPort, Data} lub {}
+%%     jesli wystapil blad lub nie odebrano danych.
 %%------------------------------------------------------------------------------
 read(Port) ->
     read(Port, 1000).
@@ -49,9 +54,9 @@ recv(Socket, Timeout) ->
     Return.
 
 %%------------------------------------------------------------------------------
-%% Function: send/3
-%% Purpose: Send data with UDP protocol to given address and port.
-%% Args: Address of reciever as a touple, Port number and Data in any type.
+%% Funkcja: send/3
+%% Cel: Wysyla dane przez protokol UDP na podany adress i port.
+%% Argumenty: Adres docelowy jako krotka, port oraz dane do wyslania.
 %%------------------------------------------------------------------------------
 send(Address, Port, Data) ->
     {ok, Socket} = gen_udp:open(0, [binary, {active, false}]),
