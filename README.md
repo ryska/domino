@@ -3,7 +3,7 @@
 
 ## Ogólny opis programu
 
-W założeniu system //Dom// ma pozwalać na zaprogramowanie prostych zależności pomiędzy różnymi nadajnikami i czujnikami rozmieszczonymi w domu. Aplikacja udostępnia jednolity interfejs programistyczny, dzięki któremu możemy zdefiniować //reakcje// systemu na dane płynące z czujników.
+W założeniu system ma pozwalać na zaprogramowanie prostych zależności pomiędzy różnymi nadajnikami i czujnikami rozmieszczonymi w domu. Aplikacja udostępnia jednolity interfejs programistyczny, dzięki któremu możemy zdefiniować _reakcje_ systemu na dane płynące z czujników.
 
 ### Architektura
 
