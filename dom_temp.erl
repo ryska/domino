@@ -1,6 +1,17 @@
 -module(dom_temp).
 -export([start/4, stop/3, loop/3]).
 
+%%%-------------------
+%%% dom_temp symuluje zachowanie czujnika temperatury
+%%% funkcje: start, stop, loop
+%%%-------------------
+
+
+%%-------------------------
+%% funckja start
+%% rejestruje czujnik na serwerze,
+%% uruchamia czujnik temperatury na danym porcie
+%%-------------------------
 start(ServerAddress, ServerPort, Id, Name) ->
     try
         io:format("Uruchamiam czujnik temperatury o ID ~p...~n", [Id]),
@@ -8,12 +19,16 @@ start(ServerAddress, ServerPort, Id, Name) ->
         ets:new(dom_pids, [set, named_table]),
         ets:insert(dom_pids, {loop, PID}),
         dom_client:register(ServerAddress, ServerPort, Id, Name, 0),
-        start
+        start.
     catch
         _:_ -> io:format("Pojedynczy proces moze obslugiwac tylko jeden czujnik!~n", []),
         blad
     end.
 
+%%-------------------------
+%% funckja stop
+%% zatrzymuje działanie czujnika temperatury
+%%-------------------------
 stop(ServerAddress, ServerPort, Id) ->
     try
         dom_client:delete(ServerAddress, ServerPort, Id),
@@ -26,6 +41,11 @@ stop(ServerAddress, ServerPort, Id) ->
         _:_ -> io:format("Brak dzialajacego czujnika na tym procesie!~n"),
         blad
     end.
+
+%%-------------------------
+%% funckja loop
+%% wysyła co 5 sekund do serwera informacje o temperaturze
+%%-------------------------
 
 loop(ServerAddress, ServerPort, Id) ->
     dom_client:data(ServerAddress, ServerPort, Id, random:uniform(40)),

@@ -1,6 +1,12 @@
 -module(dom_alarm).
 -export([start/4, stop/3, loop/3]).
 
+%%%-------------------
+%%% dom_alarm symuluje zachowanie czujnika alarmu
+%%% funkcje: start, stop, loop
+%%%-------------------
+
+
 start(ServerAddress, ServerPort, Id, Name) ->
     try
         io:format("Uruchamiam czujnik alarmu o id: ~p...~n", [Id]),

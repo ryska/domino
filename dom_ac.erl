@@ -1,6 +1,19 @@
 -module(dom_ac).
 -export([start/4, stop/3, loop/3]).
 
+%%%-------------------
+%%% dom_ac symuluje zachowanie kontrolera klimatyzacji
+%%% funkcje: start, stop, loop
+%%%
+%%%
+%%%-------------------
+
+
+%%-------------------------
+%% funckja start
+%% rejestruje kontroler na serwerze,
+%% uruchamia kontroler klimatyzacji na danym porcie
+%%-------------------------
 start(ServerAddress, ServerPort, Id, Name) ->
     try
         io:format("Uruchamiam kontroler klimatyzacji o id: ~p...~n", [Id]),
@@ -14,6 +27,10 @@ start(ServerAddress, ServerPort, Id, Name) ->
         blad
     end.
 
+  %%-------------------------
+  %% funckja stop
+  %% zatrzymuje działanie kontrolera klimatyzacji
+  %%-------------------------
 stop(ServerAddress, ServerPort, Id) ->
     try
         dom_client:delete(ServerAddress, ServerPort, Id),
@@ -26,6 +43,11 @@ stop(ServerAddress, ServerPort, Id) ->
         _:_ -> io:format("Brak dzialajacego czujnika na tym procesie!~n"),
         blad
     end.
+
+  %%-------------------------
+  %% funckja loop
+  %% dostaje informacje czy włączyć czy wyłączyć klimatyzację
+  %%-------------------------
 
 loop(ServerAddress, ServerPort, Id) ->
     case dom_net:read(8081) of
