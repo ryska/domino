@@ -1,6 +1,18 @@
 -module(dom_okno).
 -export([start/4, stop/3, loop/3]).
 
+%%%-------------------
+%%% dom_okno symuluje zachowanie kontrolera wysyłania sms.
+%%% funkcje: start, stop, loop
+%%%-------------------
+
+%%-------------------------
+%% Funckja start
+%% Rejestruje kontroler na serwerze,
+%% uruchamia kontroler danym porcie.
+%%-------------------------
+
+
 start(ServerAddress, ServerPort, Id, Name) ->
     try
         io:format("Uruchamiam kontroler okien o id: ~p...~n", [Id]),
@@ -14,6 +26,11 @@ start(ServerAddress, ServerPort, Id, Name) ->
         blad
     end.
 
+%%-------------------------
+%% Funckja stop
+%% Zatrzymuje działanie kontrolera.
+%%-------------------------
+
 stop(ServerAddress, ServerPort, Id) ->
     try
         dom_client:delete(ServerAddress, ServerPort, Id),
@@ -26,6 +43,11 @@ stop(ServerAddress, ServerPort, Id) ->
         _:_ -> io:format("Brak dzialajacego czujnika na tym procesie!~n"),
         blad
     end.
+
+%%-------------------------
+%% Funckja loop
+%% Dostaje informacje z informacją, czy otworzyć okna.
+%%-------------------------
 
 loop(ServerAddress, ServerPort, Id) ->
     case dom_net:read(8085) of

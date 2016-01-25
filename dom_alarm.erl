@@ -2,10 +2,15 @@
 -export([start/4, stop/3, loop/3]).
 
 %%%-------------------
-%%% dom_alarm symuluje zachowanie czujnika alarmu
+%%% dom_alarm symuluje zachowanie czujnika alarmu.
 %%% funkcje: start, stop, loop
 %%%-------------------
 
+%%-------------------------
+%% Funckja start
+%% Rejestruje czujnik na serwerze,
+%% uruchamia czujnik alarmu danym porcie.
+%%-------------------------
 
 start(ServerAddress, ServerPort, Id, Name) ->
     try
@@ -20,6 +25,11 @@ start(ServerAddress, ServerPort, Id, Name) ->
         blad
     end.
 
+%%-------------------------
+%% Funckja stop
+%% Zatrzymuje działanie czujnika alarmu.
+%%-------------------------
+
 stop(ServerAddress, ServerPort, Id) ->
     try
         dom_client:delete(ServerAddress, ServerPort, Id),
@@ -33,8 +43,12 @@ stop(ServerAddress, ServerPort, Id) ->
         blad
     end.
 
+%%-------------------------
+%% Funckja stop
+%% Wysyła co 10 sekund do serwera informacje, czy doszło do włamania.
+%%-------------------------
+
 loop(ServerAddress, ServerPort, Id) ->
-     %-- random mdz 0 i 1
     case random:uniform(1) of
         1 ->
             dom_client:data(ServerAddress, ServerPort, Id, tak);
