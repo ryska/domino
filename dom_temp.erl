@@ -9,8 +9,8 @@
 
 %%-------------------------
 %% funckja start
-%% rejestruje czujnik na serwerze,
-%% uruchamia czujnik temperatury na danym porcie
+%% Rejestruje czujnik na serwerze,
+%% uruchamia czujnik temperatury na danym porcie.
 %%-------------------------
 start(ServerAddress, ServerPort, Id, Name) ->
     try
@@ -26,8 +26,8 @@ start(ServerAddress, ServerPort, Id, Name) ->
     end.
 
 %%-------------------------
-%% funckja stop
-%% zatrzymuje działanie czujnika temperatury
+%% Funckja stop
+%% Zatrzymuje działanie czujnika temperatury.
 %%-------------------------
 stop(ServerAddress, ServerPort, Id) ->
     try
@@ -43,8 +43,8 @@ stop(ServerAddress, ServerPort, Id) ->
     end.
 
 %%-------------------------
-%% funckja loop
-%% wysyła co 5 sekund do serwera informacje o temperaturze
+%% Funckja loop
+%% Wysyła co 5 sekund do serwera informacje o temperaturze.
 %%-------------------------
 
 loop(ServerAddress, ServerPort, Id) ->

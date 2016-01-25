@@ -1,6 +1,16 @@
 -module(dom_dym).
 -export([start/4, stop/3, loop/3]).
 
+%%%-------------------
+%%% dom_dym symuluje zachowanie czujnika dymu.
+%%% funkcje: start, stop, loop
+%%%-------------------
+
+%%-------------------------
+%% Funckja start
+%% Rejestruje czujnik na serwerze,
+%% uruchamia czujnik dymu na danym porcie.
+%%-------------------------
 start(ServerAddress, ServerPort, Id, Name) ->
     try
         io:format("Uruchamiam czujnik dymu o id: ~p...~n", [Id]),
@@ -14,6 +24,11 @@ start(ServerAddress, ServerPort, Id, Name) ->
         blad
     end.
 
+%%-------------------------
+%% Funckja stop
+%% Zatrzymuje działanie czujnika dymu.
+%%-------------------------
+
 stop(ServerAddress, ServerPort, Id) ->
     try
         dom_client:delete(ServerAddress, ServerPort, Id),
@@ -26,6 +41,11 @@ stop(ServerAddress, ServerPort, Id) ->
         _:_ -> io:format("Brak dzialajacego czujnika na tym procesie!~n"),
         blad
     end.
+
+%%-------------------------
+%% Funckja loop
+%% Wysyła co 10 sekund do serwera informacje o obecności dymu.
+%%-------------------------
 
     loop(ServerAddress, ServerPort, Id) ->
          %-- random mdz 0 i 1
